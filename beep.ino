@@ -1,17 +1,19 @@
+#include <morse.h>
 #include <SPI.h>
 #include <RH_RF22.h>
 
 float operatingFrequency = 432.330;
-int pwmFreq = 96;
+int pwmFreq = 64;
 int keyPin = 6;
+
+String message = String("K3JPH/B Columbia, Maryland");
 
 // Singleton instance of the radio driver
 RH_RF22 rf22;
+PWMMorseSender sender(keyPin, 25, pwmFreq);
 
 void setup()
 {
-  pinMode(keyPin, OUTPUT);      // sets the digital pin as output
-
   Serial.begin(9600);
   if (!rf22.init())
     Serial.println("init failed");
@@ -19,16 +21,17 @@ void setup()
   rf22.setFrequency(operatingFrequency);
   rf22.setModemConfig(RH_RF22::UnmodulatedCarrier);
   rf22.setModeTx();
-  rf22.setTxPower(RH_RF22_TXPOW_1DBM);
+  rf22.setTxPower(RH_RF22_TXPOW_20DBM);
+
+  sender.setup();
+  sender.setMessage(message);
 }
 
 void loop()
 {
-  Serial.println("loop failed");
-  dot(); 
-  dash(); 
-  dot();
-  delay(1000);
+  if (!sender.continueSending()) {
+    sender.startSending();
+  }
 }
 
 void dot()
